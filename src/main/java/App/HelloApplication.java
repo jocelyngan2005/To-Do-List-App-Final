@@ -61,9 +61,8 @@ public class HelloApplication extends Application {
             {
                 label.setFont(Font.font("Consolas", 12));
 
-                // Ensure the checkbox is clickable, but the label is not
-                checkBox.setMouseTransparent(false); // Allow checkbox clicks
-                label.setMouseTransparent(true); // Prevent label clicks from interfering
+                checkBox.setMouseTransparent(false);
+                label.setMouseTransparent(true);
 
                 HBox.setMargin(label, new Insets(0, 0, 0, 10));
             }
@@ -249,14 +248,13 @@ public class HelloApplication extends Application {
             Tasks task = db.fetchTaskById(currentUser.getUser_id(), taskId);
             Tasks dependentTask = db.fetchTaskById(currentUser.getUser_id(), task.getDependency());
 
-            // Show an alert if the task cannot be marked as completed due to a dependency
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Warning");
             alert.setHeaderText("Task Dependency");
             Label contentLabel = new Label("Task \"" + task.getTitle() + "\" cannot be marked as complete because it depends on \"" + dependentTask.getTitle() + "\". Please complete \"" + dependentTask.getTitle() + "\" first.");
-            contentLabel.setWrapText(true); // Enable text wrapping
+            contentLabel.setWrapText(true);
             alert.getDialogPane().setContent(contentLabel);
-            alert.getDialogPane().setMinWidth(400); // Adjust the width as needed
+            alert.getDialogPane().setMinWidth(400);
 
             alert.showAndWait();
         }

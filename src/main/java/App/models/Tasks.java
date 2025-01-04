@@ -68,7 +68,7 @@ public class Tasks {
     public void setTaskId(int task_id) { this.task_id = task_id; }
     public void setTitle(String title) { this.title = title; }
     public void setDescription(String description) { this.description = description; }
-    public void setDueDate(Date due_date) { this.due_date = due_date; updateStatus();}
+    public void setDueDate(Date due_date) { this.due_date = due_date; updateStatus(); }
     public void setType(String type) { this.type = type; }
     public void setStatus(String status) { this.status = status; }
     public void setPriority(Priority priority) { this.priority = priority; }
@@ -77,6 +77,7 @@ public class Tasks {
     public void setRecurrenceType(Recurrence_type recurrence_type) { this.recurrence_type = recurrence_type; }
     public void setRecurrenceEndDate(Date recurrence_end_date) { this.recurrence_end_date = recurrence_end_date; }
 
+//    CHECK TIME RELATED CONDITIONS
     private void updateStatus() {
         LocalDate currentDate = LocalDate.now(); // Get the current date and time
         if (due_date.toLocalDate().isBefore(currentDate)) {
@@ -86,22 +87,43 @@ public class Tasks {
         }
     }
 
+    public void checkDueDateAndNotify(String recipient) {
+        if (!this.status.equals("COMPLETED") && (this.due_date != null)) {
+
+            LocalDate currentDate = LocalDate.now();
+            LocalDate dueDate = this.due_date.toLocalDate();
+
+            System.out.println("Current Date: " + currentDate);
+            System.out.println("Due Date: " + dueDate);
+
+            boolean isDueWithin24Hours = dueDate.isEqual(currentDate) || (dueDate.isAfter(currentDate) && dueDate.isBefore(currentDate.plusDays(2)));
+            System.out.println("Is due within 24 hours? " + isDueWithin24Hours);
+
+            if (isDueWithin24Hours) {
+                String subject = "Task Due Reminder";
+                String body = "Your task '" + this.title + "' is due within 24 hours. Please complete it soon!";
+                System.out.println("Sending email to: " + recipient);
+                EmailService.sendEmail(recipient, subject, body);
+            }
+        }
+    }
+
     public void createNextRecurrence(int user_id, Tasks completedTask) {
 
         LocalDate nextDueDate = calculateNextDueDate(completedTask.getDueDate().toLocalDate(), completedTask.getRecurrenceType());
 
-        if ((completedTask.isRecurring() == 'N') || (completedTask.getRecurrenceEndDate() != null && nextDueDate.isAfter(completedTask.getRecurrenceEndDate().toLocalDate()))) {
-            return; // Recurrence has ended
+        boolean isNotOngoing = (completedTask.isRecurring() == 'N') || (completedTask.getRecurrenceEndDate() != null && nextDueDate.isAfter(completedTask.getRecurrenceEndDate().toLocalDate()));
+
+        if (!isNotOngoing) {
+            Tasks newTask = completedTask;
+            newTask.setDueDate(Date.valueOf(nextDueDate));
+
+            databaseconn db = new databaseconn();
+            db.insertTask(user_id, newTask.getTitle(), newTask.getDescription(), newTask.getDueDate(), newTask.getType(), newTask.getStatus(), newTask.getPriority(), newTask.getDependency(), newTask.isRecurring(), newTask.getRecurrenceType(), newTask.getRecurrenceEndDate());
+
+            String email = db.fetchEmailByID(user_id);
+            checkDueDateAndNotify(email);
         }
-
-        Tasks newTask = completedTask;
-        newTask.setDueDate(Date.valueOf(nextDueDate));
-
-        databaseconn db = new databaseconn();
-        db.insertTask(user_id, newTask.getTitle(), newTask.getDescription(), newTask.getDueDate(), newTask.getType(), newTask.getStatus(), newTask.getPriority(), newTask.getDependency(), newTask.isRecurring(), newTask.getRecurrenceType(), newTask.getRecurrenceEndDate());
-
-        String email = db.fetchEmailByID(user_id);
-        checkDueDateAndNotify(email);
     }
 
     private LocalDate calculateNextDueDate(LocalDate currentDueDate, Recurrence_type recurrenceType) {
@@ -119,34 +141,24 @@ public class Tasks {
         }
     }
 
-
-    public Tasks displayTaskDetails(int user_id, int taskID) {
-        databaseconn db = new databaseconn();
-        Tasks task = db.fetchTaskById(user_id, taskID);
-        return task;
-    }
-
+//    CHECK FOR CYCLE
     public boolean hasCycle() {
-        Tasks slow = this; // Slow pointer
-        Tasks fast = this; // Fast pointer
+        Tasks slow = this;
+        Tasks fast = this;
 
         while (fast != null && fast.getDependency() != 0) {
-            // Move slow pointer one step
             slow = taskMap.get(slow.getDependency());
             if (slow == null || slow.getDependency() == 0) {
                 return false;
             }
 
-            // Move fast pointer first step
             fast = taskMap.get(fast.getDependency());
             if (fast == null || fast.getDependency() == 0) {
                 return false;
             }
 
-            // Move fast pointer second step
             fast = taskMap.get(fast.getDependency());
 
-            // If pointers meet at any point, we found a cycle
             if (slow != null && fast != null && slow.task_id == fast.task_id) {
                 return true;
             }
@@ -160,7 +172,6 @@ public class Tasks {
             return false;
         }
 
-        // Check if the dependency task exists
         if (!taskMap.containsKey(dependency)) {
             System.out.println("Error: Dependency task does not exist.");
             return false;
@@ -179,7 +190,7 @@ public class Tasks {
         }
     }
 
-    // Method to get task details from user input
+//    GET TASKS INFO
     public void getTaskDetails(int user_id, String title_in, String description_in, Date due_date_in, String type_in, Priority priority_in, char is_recurring_in, Recurrence_type recurrence_type_in, Date recurrence_end_date_in) {
         databaseconn db = new databaseconn();
 
@@ -234,6 +245,7 @@ public class Tasks {
         return true;
     }
 
+//    COMPLETE / DELETE TASKS
     public boolean checkOffTask(int user_id, int taskId, boolean isCompleted) {
         databaseconn db = new databaseconn();
         Tasks task = db.fetchTaskById(user_id, taskId);
@@ -271,6 +283,7 @@ public class Tasks {
         return db.deleteTask(taskId, task.getTitle());
     }
 
+//    DISPLAY TASK DETAILS
     public ArrayList<Tasks> displayTaskList(int choice, int user_id) {
         databaseconn db = new databaseconn();
         if (db.fetchTasksFromDatabase(user_id).isEmpty()) {
@@ -296,6 +309,12 @@ public class Tasks {
             }
             return list;
         }
+    }
+
+    public Tasks displayTaskDetails(int user_id, int taskID) {
+        databaseconn db = new databaseconn();
+        Tasks task = db.fetchTaskById(user_id, taskID);
+        return task;
     }
 
     public HashMap<String, Object> getTaskSummary(int user_id) {
@@ -331,33 +350,6 @@ public class Tasks {
 
         return summary;
     }
-
-    public void checkDueDateAndNotify(String recipient) {
-
-        if (this.due_date == null) {
-            System.out.println("Due date is not set for this task.");
-            return;
-        }
-
-        LocalDate currentDate = LocalDate.now();
-        LocalDate dueDate = this.due_date.toLocalDate();
-
-        System.out.println("Current Date: " + currentDate);
-        System.out.println("Due Date: " + dueDate);
-
-        boolean isDueWithin24Hours = dueDate.isEqual(currentDate) || (dueDate.isAfter(currentDate) && dueDate.isBefore(currentDate.plusDays(2)));
-        System.out.println("Is due within 24 hours? " + isDueWithin24Hours);
-
-        if (isDueWithin24Hours) {
-            String subject = "Task Due Reminder";
-            String body = "Your task '" + this.title + "' is due within 24 hours. Please complete it soon!";
-            System.out.println("Sending email to: " + recipient);
-            EmailService.sendEmail(recipient, subject, body);
-        }
-    }
-
-
-
 }
 
 
