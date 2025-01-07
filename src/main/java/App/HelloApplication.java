@@ -3,6 +3,7 @@ package App;
 import App.models.Tasks;
 import App.models.Users;
 import App.utils.EmailService;
+import App.utils.EmbeddingGenerator;
 import App.utils.databaseconn;
 
 import javafx.application.Application;
@@ -272,17 +273,49 @@ public class HelloApplication extends Application {
 
 
     private void searchTasks() {
-        String keyword = searchBar.getText().toLowerCase();
-        Tasks t = new Tasks();
-        ObservableList<Tasks> searchResults = FXCollections.observableArrayList();
+        String keyword = searchBar.getText().trim();
 
-        for (Tasks task : t.displayTaskList(1, currentUser.getUser_id())) {
-            if (task.getTitle().toLowerCase().contains(keyword) || task.getDescription().toLowerCase().contains(keyword)) {
-                searchResults.add(task); // Add the task to the search results
+        // If the search bar is empty, fetch all tasks and display them
+        if (keyword.isEmpty()) {
+            databaseconn db = new databaseconn();
+            ArrayList<Tasks> allTasks;
+            try {
+                allTasks = db.fetchTasksFromDatabase(currentUser.getUser_id());
+                System.out.println("All tasks size: " + allTasks.size()); // Debugging
+            } catch (Exception e) {
+                System.err.println("Error fetching all tasks: " + e.getMessage());
+                return; // Exit the method if fetching tasks fails
             }
+
+            ObservableList<Tasks> observableResults = FXCollections.observableArrayList(allTasks);
+            System.out.println("Observable results size: " + observableResults.size()); // Debugging
+
+            taskList.setItems(observableResults);
+            return; // Exit the method after displaying all tasks
         }
 
-        taskList.setItems(searchResults);
+        // Generate an embedding for the search query
+        float[] queryEmbedding;
+        try {
+            queryEmbedding = EmbeddingGenerator.getEmbedding(keyword);
+        } catch (Exception e) {
+            System.err.println("Error generating embedding: " + e.getMessage());
+            return; // Exit the method if embedding generation fails
+        }
+
+        // Fetch tasks based on semantic similarity
+        databaseconn db = new databaseconn();
+        ArrayList<Tasks> searchResults;
+        try {
+            searchResults = db.searchTasksByEmbedding(queryEmbedding, currentUser.getUser_id());
+        } catch (Exception e) {
+            System.err.println("Error searching tasks: " + e.getMessage());
+            return;
+        }
+
+        ObservableList<Tasks> observableResults = FXCollections.observableArrayList(searchResults);
+
+        taskList.setItems(observableResults);
     }
 
     private void filterTasks() {
