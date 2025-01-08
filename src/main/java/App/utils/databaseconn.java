@@ -328,7 +328,6 @@ public class databaseconn {
             stmt.setInt(1, user_id);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    // Extract data from the ResultSet
                     int taskID = rs.getInt("id");
                     String title = rs.getString("title");
                     String description = rs.getString("description");
@@ -341,7 +340,6 @@ public class databaseconn {
                     Tasks.Recurrence_type recurrence_type = Tasks.Recurrence_type.valueOf(rs.getString("recurrence_type")); // Convert string to enum
                     Date recurrence_end_date = rs.getDate("recurrence_end_date");
 
-                    // Create a Task object and add it to the ArrayList
                     Tasks task = new Tasks(taskID, title, description, due_date, type, status, priority, dependency, is_recurring, recurrence_type, recurrence_end_date);
                     taskList.add(task);
                 }
@@ -375,9 +373,8 @@ public class databaseconn {
                     Tasks.Recurrence_type recurrence_type = Tasks.Recurrence_type.valueOf(rs.getString("recurrence_type"));
                     Date recurrence_end_date = rs.getDate("recurrence_end_date");
 
-                    // Create a Task object and add it to the HashMap
                     Tasks task = new Tasks(taskID, title, description, due_date, type, status, priority, dependency, is_recurring, recurrence_type, recurrence_end_date);
-                    taskMap.put(taskID, task); // Add the task to the HashMap
+                    taskMap.put(taskID, task);
                 }
             }
         } catch (SQLException | ClassNotFoundException e) {
@@ -398,7 +395,6 @@ public class databaseconn {
             stmt.setInt(1, user_id);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    // Extract data from the ResultSet
                     int taskID = rs.getInt("id");
                     String title = rs.getString("title");
                     String description = rs.getString("description");
@@ -411,18 +407,14 @@ public class databaseconn {
                     Tasks.Recurrence_type recurrence_type = Tasks.Recurrence_type.valueOf(rs.getString("recurrence_type"));
                     Date recurrence_end_date = rs.getDate("recurrence_end_date");
 
-                    // Fetch the task's embedding as a byte array
                     byte[] embeddingBytes = rs.getBytes("embedding");
 
                     System.out.println("Retrieved embedding bytes length: " + embeddingBytes.length);
 
-                    // Convert the byte array to a float array
                     float[] taskEmbedding = toFloatArray(embeddingBytes);
 
-                    // Calculate cosine similarity between the query embedding and the task's embedding
                     double similarity = cosineSimilarity(queryEmbedding, taskEmbedding);
 
-                    // Add the task to the list if similarity exceeds the threshold
                     if (similarity > SIMILARITY_THRESHOLD) {
                         Tasks task = new Tasks(taskID, title, description, due_date, type, status, priority, dependency, is_recurring, recurrence_type, recurrence_end_date);
                         taskList.add(task);
@@ -436,7 +428,6 @@ public class databaseconn {
         return taskList;
     }
 
-    // Helper method to convert byte[] to float[]
     public static float[] toFloatArray(byte[] byteArray) {
         if (byteArray == null || byteArray.length == 0) {
             throw new IllegalArgumentException("Byte array is null or empty");
@@ -449,7 +440,6 @@ public class databaseconn {
         }
 
         ByteBuffer buffer = ByteBuffer.wrap(byteArray);
-        // Use same byte ordering as in toByteArray
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         float[] floatArray = new float[byteArray.length / Float.BYTES];
 
@@ -460,7 +450,6 @@ public class databaseconn {
     }
 
     public static double cosineSimilarity(float[] vectorA, float[] vectorB) {
-        // Validate input vectors
         if (vectorA == null || vectorB == null) {
             throw new IllegalArgumentException("Vectors cannot be null.");
         }
@@ -468,13 +457,11 @@ public class databaseconn {
             throw new IllegalArgumentException("Vectors must have the same length.");
         }
 
-        // Calculate dot product
         double dotProduct = 0.0;
         for (int i = 0; i < vectorA.length; i++) {
             dotProduct += vectorA[i] * vectorB[i];
         }
 
-        // Calculate magnitudes (norms) of the vectors
         double normA = 0.0;
         double normB = 0.0;
         for (int i = 0; i < vectorA.length; i++) {
@@ -484,12 +471,10 @@ public class databaseconn {
         normA = Math.sqrt(normA);
         normB = Math.sqrt(normB);
 
-        // Avoid division by zero
         if (normA == 0 || normB == 0) {
             throw new IllegalArgumentException("One of the vectors has zero magnitude.");
         }
 
-        // Calculate and return cosine similarity
         return dotProduct / (normA * normB);
     }
 

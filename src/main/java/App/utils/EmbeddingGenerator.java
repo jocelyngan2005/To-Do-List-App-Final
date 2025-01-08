@@ -44,12 +44,10 @@ public class EmbeddingGenerator {
         }
     }
 
-    // Combine title and description embeddings (e.g., by averaging)
     public static float[] getCombinedEmbedding(String title, String description) throws Exception {
         float[] titleEmbedding = getEmbedding(title);
         float[] descriptionEmbedding = getEmbedding(description);
 
-        // Average the two embeddings
         float[] combinedEmbedding = new float[titleEmbedding.length];
         for (int i = 0; i < titleEmbedding.length; i++) {
             combinedEmbedding[i] = (titleEmbedding[i] + descriptionEmbedding[i]) / 2.0f;

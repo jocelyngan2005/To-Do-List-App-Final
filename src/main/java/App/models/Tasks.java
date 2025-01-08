@@ -93,15 +93,14 @@ public class Tasks {
             LocalDate currentDate = LocalDate.now();
             LocalDate dueDate = this.due_date.toLocalDate();
 
-            System.out.println("Current Date: " + currentDate);
-            System.out.println("Due Date: " + dueDate);
-
-            boolean isDueWithin24Hours = dueDate.isEqual(currentDate) || (dueDate.isAfter(currentDate) && dueDate.isBefore(currentDate.plusDays(2)));
-            System.out.println("Is due within 24 hours? " + isDueWithin24Hours);
-
-            if (isDueWithin24Hours) {
+            if (dueDate.isEqual(currentDate) || (dueDate.isAfter(currentDate) && dueDate.isBefore(currentDate.plusDays(2)))) {
                 String subject = "Task Due Reminder";
                 String body = "Your task '" + this.title + "' is due within 24 hours. Please complete it soon!";
+                System.out.println("Sending email to: " + recipient);
+                EmailService.sendEmail(recipient, subject, body);
+            } else if (dueDate.isBefore(currentDate)) {
+                String subject = "Overdue Task Reminder";
+                String body = "Your task '" + this.title + "' is overdue! Please complete it soon!";
                 System.out.println("Sending email to: " + recipient);
                 EmailService.sendEmail(recipient, subject, body);
             }

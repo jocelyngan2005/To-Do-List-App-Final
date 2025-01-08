@@ -275,35 +275,32 @@ public class HelloApplication extends Application {
     private void searchTasks() {
         String keyword = searchBar.getText().trim();
 
-        // If the search bar is empty, fetch all tasks and display them
         if (keyword.isEmpty()) {
             databaseconn db = new databaseconn();
             ArrayList<Tasks> allTasks;
             try {
                 allTasks = db.fetchTasksFromDatabase(currentUser.getUser_id());
-                System.out.println("All tasks size: " + allTasks.size()); // Debugging
+                System.out.println("All tasks size: " + allTasks.size());
             } catch (Exception e) {
                 System.err.println("Error fetching all tasks: " + e.getMessage());
-                return; // Exit the method if fetching tasks fails
+                return;
             }
 
             ObservableList<Tasks> observableResults = FXCollections.observableArrayList(allTasks);
-            System.out.println("Observable results size: " + observableResults.size()); // Debugging
+            System.out.println("Observable results size: " + observableResults.size());
 
             taskList.setItems(observableResults);
-            return; // Exit the method after displaying all tasks
+            return;
         }
 
-        // Generate an embedding for the search query
         float[] queryEmbedding;
         try {
             queryEmbedding = EmbeddingGenerator.getEmbedding(keyword);
         } catch (Exception e) {
             System.err.println("Error generating embedding: " + e.getMessage());
-            return; // Exit the method if embedding generation fails
+            return;
         }
 
-        // Fetch tasks based on semantic similarity
         databaseconn db = new databaseconn();
         ArrayList<Tasks> searchResults;
         try {
