@@ -285,29 +285,25 @@ public class Tasks {
 //    DISPLAY TASK DETAILS
     public ArrayList<Tasks> displayTaskList(int choice, int user_id) {
         databaseconn db = new databaseconn();
-        if (db.fetchTasksFromDatabase(user_id).isEmpty()) {
-            System.out.println("No tasks found.");
-            return db.fetchTasksFromDatabase(user_id);
-        } else {
-            ArrayList<Tasks> list = db.fetchTasksFromDatabase(user_id);
-            switch (choice) {
-                case 1:
-                    break;
-                case 2:
-                    Collections.sort(list, Comparator.comparing(Tasks::getDueDate));
-                    break;
-                case 3:
-                    Collections.sort(list, Comparator.comparing(Tasks::getDueDate).reversed());
-                    break;
-                case 4:
-                    Collections.sort(list, Comparator.comparing(Tasks::getPriority).reversed());
-                    break;
-                case 5:
-                    Collections.sort(list, Comparator.comparing(Tasks::getPriority));
-                    break;
-            }
-            return list;
+        ArrayList<Tasks> list = db.fetchTasksFromDatabase(user_id);
+        switch (choice) {
+            case 1:
+                break;
+            case 2:
+                Collections.sort(list, Comparator.comparing(Tasks::getDueDate));
+                break;
+            case 3:
+                Collections.sort(list, Comparator.comparing(Tasks::getDueDate).reversed());
+                break;
+            case 4:
+                Collections.sort(list, Comparator.comparing(Tasks::getPriority).reversed());
+                break;
+            case 5:
+                Collections.sort(list, Comparator.comparing(Tasks::getPriority));
+                break;
         }
+        return list;
+
     }
 
     public Tasks displayTaskDetails(int user_id, int taskID) {
@@ -323,12 +319,12 @@ public class Tasks {
         int totalTasks = taskMap.size();
 
         int completed = 0;
-        int pending = 0;
+        int incomplete = 0;
         for (Tasks task : taskMap.values()) {
             if (task.getStatus().equals("COMPLETED")) {
                 completed++;
             } else {
-                pending++;
+                incomplete++;
             }
         }
 
@@ -343,7 +339,7 @@ public class Tasks {
         HashMap<String, Object> summary = new HashMap<>();
         summary.put("Total Tasks", totalTasks);
         summary.put("Completed", completed);
-        summary.put("Pending", pending);
+        summary.put("Incomplete", incomplete);
         summary.put("Completion Rate", completionRate);
         summary.put("Task Categories", categorySummary);
 

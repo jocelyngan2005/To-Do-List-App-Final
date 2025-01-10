@@ -276,20 +276,7 @@ public class HelloApplication extends Application {
         String keyword = searchBar.getText().trim();
 
         if (keyword.isEmpty()) {
-            databaseconn db = new databaseconn();
-            ArrayList<Tasks> allTasks;
-            try {
-                allTasks = db.fetchTasksFromDatabase(currentUser.getUser_id());
-                System.out.println("All tasks size: " + allTasks.size());
-            } catch (Exception e) {
-                System.err.println("Error fetching all tasks: " + e.getMessage());
-                return;
-            }
-
-            ObservableList<Tasks> observableResults = FXCollections.observableArrayList(allTasks);
-            System.out.println("Observable results size: " + observableResults.size());
-
-            taskList.setItems(observableResults);
+            refreshTaskList();
             return;
         }
 
@@ -508,7 +495,7 @@ public class HelloApplication extends Application {
 
         Label totalTasksLabel = new Label("Total Tasks: " + summary.get("Total Tasks"));
         Label completedLabel = new Label("Completed: " + summary.get("Completed"));
-        Label pendingLabel = new Label("Pending: " + summary.get("Pending"));
+        Label pendingLabel = new Label("Incomplete: " + summary.get("Incomplete"));
         Label completionRateLabel = new Label(String.format("Completion Rate: %.2f%%", summary.get("Completion Rate")));
 
         HashMap<String, Integer> categories = (HashMap<String, Integer>) summary.get("Task Categories");
