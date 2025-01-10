@@ -23,7 +23,6 @@ public class Users {
     public void setPassword(String password) { this.password = password; }
     public void setUser_id(int user_id) { this.user_id = user_id; }
 
-    // Sign Up Method
     public void signUp(String email, String password) {
         databaseconn db = new databaseconn();
 
@@ -37,7 +36,6 @@ public class Users {
 
     }
 
-    // Sign In Method
     public Users signIn(String email, String password) {
         databaseconn db = new databaseconn();
         Users user = db.fetchUserByEmail(email);

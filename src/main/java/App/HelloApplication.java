@@ -620,6 +620,12 @@ public class HelloApplication extends Application {
                 return;
             }
 
+            if (!email.matches("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$")) {
+                showAlert("Error", "Please enter a valid email address.");
+                event.consume();
+                return;
+            }
+
             user.signUp(email, password);
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Success");
